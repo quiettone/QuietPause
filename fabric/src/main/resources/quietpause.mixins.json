@@ -1,0 +1,13 @@
+{
+  "required": true,
+  "package": "com.quiettone.quietpause.mixin",
+  "compatibilityLevel": "JAVA_21",
+  "mixins": [
+    "EntityMixin",
+    "LivingEntityMixin",
+    "ServerPlayerEntityMixin"
+  ],
+  "injectors": {
+    "defaultRequire": 1
+  }
+}

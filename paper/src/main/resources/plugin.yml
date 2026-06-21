@@ -1,0 +1,17 @@
+name: QuietPause
+version: 1.0.0
+main: com.quiettone.quietpause.QuietPause
+api-version: 1.20
+authors:
+  - quiettone
+description: QuietPause for Paper
+commands:
+  quiet:
+    description: QuietPause commands
+  f:
+    description: Toggles the pause
+  p:
+    description: Toggles the pause
+permissions:
+  quiet.pause.admin:
+    default: op

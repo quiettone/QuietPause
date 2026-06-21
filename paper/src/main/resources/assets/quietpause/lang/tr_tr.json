@@ -1,0 +1,8 @@
+{
+  "quietpause.error.no_permission": "Bunu yapma yetkin yok.",
+  "quietpause.error.players_only": "Bu komutu sadece oyuncular kullanabilir.",
+  "quietpause.pause.countdown": "§e» §fOyun {seconds} saniye icinde devam edecek.",
+  "quietpause.pause.resumed": "§a» §fOyun devam ediyor.",
+  "quietpause.pause.started": "§b» §fOyun §e{player}§f tarafindan durduruldu.",
+  "quietpause.pause.started.server": "§b» §fOyun §eSunucu§f tarafindan durduruldu."
+}

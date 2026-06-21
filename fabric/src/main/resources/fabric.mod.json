@@ -1,0 +1,27 @@
+{
+  "schemaVersion": 1,
+  "id": "quietpause",
+  "version": "${version}",
+  "name": "QuietPause for Fabric",
+  "description": "Fabric version of QuietPause for Minecraft 1.21.11.",
+  "authors": [
+    "quiettone"
+  ],
+  "contact": {},
+  "license": "All-Rights-Reserved",
+  "environment": "*",
+  "entrypoints": {
+    "main": [
+      "com.quiettone.quietpause.QuietPause"
+    ]
+  },
+  "mixins": [
+    "quietpause.mixins.json"
+  ],
+  "depends": {
+    "fabricloader": ">=0.19.3",
+    "minecraft": "1.21.11",
+    "fabric-api": ">=0.141.4+1.21.11",
+    "java": ">=21"
+  }
+}

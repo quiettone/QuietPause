@@ -1,0 +1,8 @@
+{
+  "quietpause.error.no_permission": "You do not have permission to do that.",
+  "quietpause.error.players_only": "Only players can use this command.",
+  "quietpause.pause.countdown": "§e» §fGame will resume in {seconds} seconds.",
+  "quietpause.pause.resumed": "§a» §fGame resumed.",
+  "quietpause.pause.started": "§b» §fGame paused by §e{player}§f.",
+  "quietpause.pause.started.server": "§b» §fGame paused by §eServer§f."
+}
