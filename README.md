@@ -21,6 +21,17 @@ While the game is paused, QuietPause:
 * Preserves entity velocity and gravity state
 * Prevents damage and hunger loss
 * Prevents explosions and fire spread
+* Stops fluid flow (water and lava)
+* Stops hopper item transfers
+* Stops dispensers and droppers
+* Stops furnaces and brewing stands
+* Stops crop, tree, and structure growth
+* Stops leaf decay, ice formation, and ice melting
+* Freezes redstone signal changes
+* Prevents entity transformations such as Piglin zombification
+* Prevents natural mob spawning
+* Prevents villager trade restocking
+* Prevents weather changes and lightning strikes
 * Stops world time
 * Protects underwater players with Water Breathing
 * Preserves and restores existing Water Breathing effects
