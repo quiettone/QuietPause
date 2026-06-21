@@ -138,10 +138,10 @@ public class PauseManager {
         setMobAI(false);
         freezeEntities();
         saveAndFreezeWorldTimes();
-        QuietPauseMessages.broadcast(
-                "quietpause.pause.started",
-                QuietPauseMessages.placeholders("player", callerName)
-        );
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.sendMessage("§8[§5QuietTone§8] " + QuietPauseMessages.text(player, "quietpause.pause.started",
+                    QuietPauseMessages.placeholders("player", callerName)));
+        }
         notifyAbilityManager("onGameFreeze");
     }
 
@@ -158,7 +158,10 @@ public class PauseManager {
         setMobAI(false);
         freezeEntities();
         saveAndFreezeWorldTimes();
-        QuietPauseMessages.broadcast("quietpause.pause.started.server", QuietPauseMessages.noPlaceholders());
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.sendMessage("§8[§5QuietTone§8] " + QuietPauseMessages.text(player, "quietpause.pause.started.server",
+                    QuietPauseMessages.noPlaceholders()));
+        }
         notifyAbilityManager("onGameFreeze");
     }
 
@@ -204,7 +207,10 @@ public class PauseManager {
             player.playSound(player.getLocation(), Sound.BLOCK_GLASS_PLACE, 1f, 1.2f);
         }
         savedWaterBreathing.clear();
-        QuietPauseMessages.broadcast("quietpause.pause.resumed", QuietPauseMessages.noPlaceholders());
+        for (Player player : Bukkit.getOnlinePlayers()) {
+            player.sendMessage("§8[§5QuietTone§8] " + QuietPauseMessages.text(player, "quietpause.pause.resumed",
+                    QuietPauseMessages.noPlaceholders()));
+        }
     }
 
     private void freezeEntities() {
