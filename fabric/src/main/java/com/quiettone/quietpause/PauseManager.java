@@ -15,6 +15,7 @@ import net.minecraft.server.world.ServerWorld;
 import net.minecraft.sound.SoundCategory;
 import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
+import net.minecraft.text.Text;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
 
@@ -191,7 +192,9 @@ public class PauseManager {
             playSound(player, SoundEvents.BLOCK_GLASS_BREAK, 1.0f, 0.5f);
         }
 
-        broadcast("quietpause.pause.started", QuietPauseMessages.placeholders("player", callerName));
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            player.sendMessage(Text.literal("§8[§5QuietTone§8] ").append(QuietPauseMessages.text(player, "quietpause.pause.started", QuietPauseMessages.placeholders("player", callerName))), false);
+        }
         QuietPauseEvents.ON_FREEZE.invoker().onFreeze(server, callerName);
     }
 
@@ -210,7 +213,9 @@ public class PauseManager {
             playSound(player, SoundEvents.BLOCK_GLASS_BREAK, 1.0f, 0.5f);
         }
 
-        broadcast("quietpause.pause.started.server", QuietPauseMessages.noPlaceholders());
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            player.sendMessage(Text.literal("§8[§5QuietTone§8] ").append(QuietPauseMessages.text(player, "quietpause.pause.started.server", QuietPauseMessages.noPlaceholders())), false);
+        }
         QuietPauseEvents.ON_FREEZE.invoker().onFreeze(server, "Server");
     }
 
@@ -259,7 +264,9 @@ public class PauseManager {
         }
         savedWaterBreathing.clear();
 
-        broadcast("quietpause.pause.resumed", QuietPauseMessages.noPlaceholders());
+        for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
+            player.sendMessage(Text.literal("§8[§5QuietTone§8] ").append(QuietPauseMessages.text(player, "quietpause.pause.resumed", QuietPauseMessages.noPlaceholders())), false);
+        }
         QuietPauseEvents.ON_UNFREEZE.invoker().onUnfreeze(server);
     }
 
