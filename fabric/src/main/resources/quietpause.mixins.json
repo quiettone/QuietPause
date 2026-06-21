@@ -3,8 +3,11 @@
   "package": "com.quiettone.quietpause.mixin",
   "compatibilityLevel": "JAVA_21",
   "mixins": [
+    "BlockEntityTickMixin",
+    "BlockRandomTickMixin",
     "EntityMixin",
     "FireBlockMixin",
+    "FluidTickMixin",
     "HungerManagerMixin",
     "LivingEntityMixin",
     "ServerPlayerEntityMixin"

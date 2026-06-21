@@ -12,12 +12,11 @@ import org.bukkit.event.block.BlockDispenseEvent;
 import org.bukkit.event.block.BlockFormEvent;
 import org.bukkit.event.block.BlockFromToEvent;
 import org.bukkit.event.block.BlockGrowEvent;
-import org.bukkit.event.block.BlockMeltEvent;
+import org.bukkit.event.block.BlockFadeEvent;
 import org.bukkit.event.block.BlockPlaceEvent;
 import org.bukkit.event.block.BlockRedstoneEvent;
 import org.bukkit.event.block.BlockSpreadEvent;
 import org.bukkit.event.block.LeavesDecayEvent;
-import org.bukkit.event.block.StructureGrowEvent;
 import org.bukkit.event.entity.CreatureSpawnEvent;
 import org.bukkit.event.entity.EntityDamageByEntityEvent;
 import org.bukkit.event.entity.EntityDamageEvent;
@@ -26,9 +25,10 @@ import org.bukkit.event.entity.EntitySpawnEvent;
 import org.bukkit.event.entity.EntityTransformEvent;
 import org.bukkit.event.entity.ExplosionPrimeEvent;
 import org.bukkit.event.entity.FoodLevelChangeEvent;
-import org.bukkit.event.entity.LightningStrikeEvent;
 import org.bukkit.event.entity.ProjectileLaunchEvent;
 import org.bukkit.event.entity.VillagerReplenishTradeEvent;
+import org.bukkit.event.weather.LightningStrikeEvent;
+import org.bukkit.event.world.StructureGrowEvent;
 import org.bukkit.event.inventory.BrewEvent;
 import org.bukkit.event.inventory.FurnaceBurnEvent;
 import org.bukkit.event.inventory.FurnaceSmeltEvent;
@@ -232,7 +232,7 @@ public class PauseListener implements Listener {
     }
 
     @EventHandler(priority = EventPriority.HIGHEST)
-    public void onBlockMelt(BlockMeltEvent event) {
+    public void onBlockFade(BlockFadeEvent event) {
         if (!manager.isFrozen()) return;
         event.setCancelled(true);
     }
@@ -278,7 +278,6 @@ public class PauseListener implements Listener {
         if (!manager.isFrozen()) return;
         var reason = event.getSpawnReason();
         if (reason == CreatureSpawnEvent.SpawnReason.NATURAL
-                || reason == CreatureSpawnEvent.SpawnReason.AMBIENT
                 || reason == CreatureSpawnEvent.SpawnReason.PATROL) {
             event.setCancelled(true);
         }
