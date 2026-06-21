@@ -40,6 +40,7 @@ public class PauseManager {
     private final Map<UUID, Vec3d> frozenEntityVelocities = new HashMap<>();
     private final Map<UUID, Vec3d> frozenPlayerPositions = new HashMap<>();
     private final Map<RegistryKey<World>, Long> frozenWorldTimes = new HashMap<>();
+    private final Map<UUID, StatusEffectInstance> savedWaterBreathing = new HashMap<>();
 
     public boolean isFrozen() {
         return frozen;
@@ -154,16 +155,23 @@ public class PauseManager {
         restoreWorlds(server);
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             player.removeStatusEffect(StatusEffects.WATER_BREATHING);
+            StatusEffectInstance saved = savedWaterBreathing.remove(player.getUuid());
+            if (saved != null) {
+                player.addStatusEffect(saved);
+            }
         }
+        savedWaterBreathing.clear();
         frozenPlayerPositions.clear();
         QuietPauseEvents.ON_UNFREEZE.invoker().onUnfreeze(server);
     }
 
     public void applyTo(ServerPlayerEntity player) {
-        if (!frozen || inCountdown) {
-            return;
-        }
+        if (!frozen || inCountdown) return;
 
+        StatusEffectInstance existing = player.getStatusEffect(StatusEffects.WATER_BREATHING);
+        if (existing != null) {
+            savedWaterBreathing.put(player.getUuid(), existing);
+        }
         player.addStatusEffect(new StatusEffectInstance(StatusEffects.WATER_BREATHING, -1, 0, false, false, false));
         frozenPlayerPositions.put(player.getUuid(), pos(player));
     }
@@ -243,8 +251,13 @@ public class PauseManager {
 
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
             player.removeStatusEffect(StatusEffects.WATER_BREATHING);
+            StatusEffectInstance saved = savedWaterBreathing.remove(player.getUuid());
+            if (saved != null) {
+                player.addStatusEffect(saved);
+            }
             playSound(player, SoundEvents.BLOCK_GLASS_PLACE, 1.0f, 1.2f);
         }
+        savedWaterBreathing.clear();
 
         broadcast("quietpause.pause.resumed", QuietPauseMessages.noPlaceholders());
         QuietPauseEvents.ON_UNFREEZE.invoker().onUnfreeze(server);

@@ -37,6 +37,7 @@ public class PauseManager {
     private final Map<UUID, Boolean> frozenEntityGravity = new HashMap<>();
     private final Map<UUID, Boolean> frozenMobAI = new HashMap<>();
     private final Map<String, Long> frozenWorldTimes = new HashMap<>();
+    private final Map<UUID, PotionEffect> savedWaterBreathing = new HashMap<>();
     private org.bukkit.scheduler.BukkitTask timeFreezeTask = null;
 
     public PauseManager(Plugin plugin) {
@@ -131,7 +132,7 @@ public class PauseManager {
 
         frozen = true;
         for (Player player : Bukkit.getOnlinePlayers()) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, Integer.MAX_VALUE, 0, false, false));
+            applyWaterBreathing(player);
             player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1f, 0.5f);
         }
         setMobAI(false);
@@ -151,7 +152,7 @@ public class PauseManager {
 
         frozen = true;
         for (Player player : Bukkit.getOnlinePlayers()) {
-            player.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, Integer.MAX_VALUE, 0, false, false));
+            applyWaterBreathing(player);
             player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1f, 0.5f);
         }
         setMobAI(false);
@@ -199,9 +200,10 @@ public class PauseManager {
         cancelTimeFreezeTask();
         notifyAbilityManager("onGameUnfreeze");
         for (Player player : Bukkit.getOnlinePlayers()) {
-            player.removePotionEffect(PotionEffectType.WATER_BREATHING);
+            restoreWaterBreathing(player);
             player.playSound(player.getLocation(), Sound.BLOCK_GLASS_PLACE, 1f, 1.2f);
         }
+        savedWaterBreathing.clear();
         QuietPauseMessages.broadcast("quietpause.pause.resumed", QuietPauseMessages.noPlaceholders());
     }
 
@@ -238,12 +240,16 @@ public class PauseManager {
     }
 
     public void freezeNewEntity(Entity entity) {
-        if (!frozen || !isFreezable(entity)) {
-            return;
+        if (!frozen) return;
+        if (entity instanceof LivingEntity && !(entity instanceof Player)) {
+            LivingEntity living = (LivingEntity) entity;
+            frozenMobAI.putIfAbsent(entity.getUniqueId(), living.hasAI());
+            living.setAI(false);
+        } else if (isFreezable(entity)) {
+            trackEntity(entity);
+            entity.setVelocity(new Vector(0, 0, 0));
+            entity.setGravity(false);
         }
-        trackEntity(entity);
-        entity.setVelocity(new Vector(0, 0, 0));
-        entity.setGravity(false);
     }
 
     public void restoreTrackedEntity(Entity entity) {
@@ -350,14 +356,29 @@ public class PauseManager {
         cancelTimeFreezeTask();
         notifyAbilityManager("onGameUnfreeze");
         for (Player player : Bukkit.getOnlinePlayers()) {
-            player.removePotionEffect(PotionEffectType.WATER_BREATHING);
+            restoreWaterBreathing(player);
         }
+        savedWaterBreathing.clear();
     }
 
     public void applyTo(Player player) {
-        if (!frozen || inCountdown) {
-            return;
+        if (!frozen || inCountdown) return;
+        applyWaterBreathing(player);
+    }
+
+    private void applyWaterBreathing(Player player) {
+        PotionEffect existing = player.getPotionEffect(PotionEffectType.WATER_BREATHING);
+        if (existing != null) {
+            savedWaterBreathing.put(player.getUniqueId(), existing);
         }
         player.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, Integer.MAX_VALUE, 0, false, false));
+    }
+
+    private void restoreWaterBreathing(Player player) {
+        player.removePotionEffect(PotionEffectType.WATER_BREATHING);
+        PotionEffect saved = savedWaterBreathing.remove(player.getUniqueId());
+        if (saved != null) {
+            player.addPotionEffect(saved);
+        }
     }
 }
