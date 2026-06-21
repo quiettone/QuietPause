@@ -1,7 +1,6 @@
 package com.quiettone.quietpause;
 
 import org.bukkit.Bukkit;
-import org.bukkit.GameRule;
 import org.bukkit.Sound;
 import org.bukkit.World;
 import org.bukkit.command.CommandSender;
@@ -37,6 +36,8 @@ public class PauseManager {
     private final Map<UUID, Vector> frozenEntityVelocities = new HashMap<>();
     private final Map<UUID, Boolean> frozenEntityGravity = new HashMap<>();
     private final Map<UUID, Boolean> frozenMobAI = new HashMap<>();
+    private final Map<String, Long> frozenWorldTimes = new HashMap<>();
+    private org.bukkit.scheduler.BukkitTask timeFreezeTask = null;
 
     public PauseManager(Plugin plugin) {
         this.plugin = plugin;
@@ -124,6 +125,10 @@ public class PauseManager {
     }
 
     private void freeze(String callerName) {
+        QuietPauseFreezeEvent event = new QuietPauseFreezeEvent(callerName);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
+
         frozen = true;
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, Integer.MAX_VALUE, 0, false, false));
@@ -131,9 +136,7 @@ public class PauseManager {
         }
         setMobAI(false);
         freezeEntities();
-        for (World world : Bukkit.getWorlds()) {
-            world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-        }
+        saveAndFreezeWorldTimes();
         QuietPauseMessages.broadcast(
                 "quietpause.pause.started",
                 QuietPauseMessages.placeholders("player", callerName)
@@ -142,6 +145,10 @@ public class PauseManager {
     }
 
     private void freezeFromServer() {
+        QuietPauseFreezeEvent event = new QuietPauseFreezeEvent(null);
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) return;
+
         frozen = true;
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, Integer.MAX_VALUE, 0, false, false));
@@ -149,9 +156,7 @@ public class PauseManager {
         }
         setMobAI(false);
         freezeEntities();
-        for (World world : Bukkit.getWorlds()) {
-            world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-        }
+        saveAndFreezeWorldTimes();
         QuietPauseMessages.broadcast("quietpause.pause.started.server", QuietPauseMessages.noPlaceholders());
         notifyAbilityManager("onGameFreeze");
     }
@@ -180,13 +185,18 @@ public class PauseManager {
     }
 
     private void unfreeze() {
+        QuietPauseUnfreezeEvent event = new QuietPauseUnfreezeEvent();
+        Bukkit.getPluginManager().callEvent(event);
+        if (event.isCancelled()) {
+            inCountdown = false;
+            return;
+        }
+
         frozen = false;
         freezerName = null;
         freezerUUID = null;
         unfreezeEntities();
-        for (World world : Bukkit.getWorlds()) {
-            world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
-        }
+        cancelTimeFreezeTask();
         notifyAbilityManager("onGameUnfreeze");
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.removePotionEffect(PotionEffectType.WATER_BREATHING);
@@ -268,6 +278,29 @@ public class PauseManager {
                 || entity instanceof TNTPrimed || entity instanceof Vehicle;
     }
 
+    private void saveAndFreezeWorldTimes() {
+        cancelTimeFreezeTask();
+        for (World world : Bukkit.getWorlds()) {
+            frozenWorldTimes.putIfAbsent(world.getName(), world.getTime());
+        }
+        timeFreezeTask = Bukkit.getScheduler().runTaskTimer(plugin, () -> {
+            for (World world : Bukkit.getWorlds()) {
+                Long frozenTime = frozenWorldTimes.get(world.getName());
+                if (frozenTime != null) {
+                    world.setTime(frozenTime);
+                }
+            }
+        }, 1L, 1L);
+    }
+
+    private void cancelTimeFreezeTask() {
+        if (timeFreezeTask != null) {
+            timeFreezeTask.cancel();
+            timeFreezeTask = null;
+        }
+        frozenWorldTimes.clear();
+    }
+
     private void setMobAI(boolean enabled) {
         for (World world : Bukkit.getWorlds()) {
             for (LivingEntity entity : world.getLivingEntities()) {
@@ -301,9 +334,7 @@ public class PauseManager {
         frozen = true;
         setMobAI(false);
         freezeEntities();
-        for (World world : Bukkit.getWorlds()) {
-            world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, false);
-        }
+        saveAndFreezeWorldTimes();
         notifyAbilityManager("onGameFreeze");
     }
 
@@ -316,9 +347,7 @@ public class PauseManager {
         freezerName = null;
         accessMode = AccessMode.PUBLIC;
         unfreezeEntities();
-        for (World world : Bukkit.getWorlds()) {
-            world.setGameRule(GameRule.DO_DAYLIGHT_CYCLE, true);
-        }
+        cancelTimeFreezeTask();
         notifyAbilityManager("onGameUnfreeze");
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.removePotionEffect(PotionEffectType.WATER_BREATHING);

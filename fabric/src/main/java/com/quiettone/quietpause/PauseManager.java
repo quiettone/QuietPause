@@ -17,7 +17,6 @@ import net.minecraft.sound.SoundEvent;
 import net.minecraft.sound.SoundEvents;
 import net.minecraft.util.math.Vec3d;
 import net.minecraft.world.World;
-import net.minecraft.world.rule.GameRules;
 
 import java.util.HashMap;
 import java.util.Map;
@@ -40,7 +39,7 @@ public class PauseManager {
     private MinecraftServer server;
     private final Map<UUID, Vec3d> frozenEntityVelocities = new HashMap<>();
     private final Map<UUID, Vec3d> frozenPlayerPositions = new HashMap<>();
-    private final Map<RegistryKey<World>, Boolean> originalDaylightRules = new HashMap<>();
+    private final Map<RegistryKey<World>, Long> frozenWorldTimes = new HashMap<>();
 
     public boolean isFrozen() {
         return frozen;
@@ -63,6 +62,7 @@ public class PauseManager {
 
         freezeEntities(server);
         freezePlayers(server);
+        freezeWorldTimes(server);
     }
 
     public void setAccessMode(ServerCommandSource source, AccessMode requestedMode) {
@@ -252,18 +252,21 @@ public class PauseManager {
 
     private void freezeWorlds(MinecraftServer server) {
         for (ServerWorld world : server.getWorlds()) {
-            RegistryKey<World> key = world.getRegistryKey();
-            originalDaylightRules.putIfAbsent(key, world.getGameRules().getValue(GameRules.ADVANCE_TIME));
-            world.getGameRules().setValue(GameRules.ADVANCE_TIME, false, server);
+            frozenWorldTimes.putIfAbsent(world.getRegistryKey(), world.getTimeOfDay());
+        }
+    }
+
+    private void freezeWorldTimes(MinecraftServer server) {
+        for (ServerWorld world : server.getWorlds()) {
+            Long frozenTime = frozenWorldTimes.get(world.getRegistryKey());
+            if (frozenTime != null) {
+                world.setTimeOfDay(frozenTime);
+            }
         }
     }
 
     private void restoreWorlds(MinecraftServer server) {
-        for (ServerWorld world : server.getWorlds()) {
-            boolean original = originalDaylightRules.getOrDefault(world.getRegistryKey(), true);
-            world.getGameRules().setValue(GameRules.ADVANCE_TIME, original, server);
-        }
-        originalDaylightRules.clear();
+        frozenWorldTimes.clear();
     }
 
     private void freezePlayers(MinecraftServer server) {

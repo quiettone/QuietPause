@@ -8,7 +8,7 @@
     "quiettone"
   ],
   "contact": {},
-  "license": "All-Rights-Reserved",
+  "license": "Apache-2.0",
   "environment": "*",
   "entrypoints": {
     "main": [
