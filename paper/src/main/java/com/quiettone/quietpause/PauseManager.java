@@ -16,7 +16,10 @@ import org.bukkit.potion.PotionEffect;
 import org.bukkit.potion.PotionEffectType;
 import org.bukkit.util.Vector;
 
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
+import java.util.List;
 import java.util.Map;
 import java.util.UUID;
 
@@ -37,7 +40,7 @@ public class PauseManager {
     private final Map<UUID, Boolean> frozenEntityGravity = new HashMap<>();
     private final Map<UUID, Boolean> frozenMobAI = new HashMap<>();
     private final Map<String, Long> frozenWorldTimes = new HashMap<>();
-    private final Map<UUID, PotionEffect> savedWaterBreathing = new HashMap<>();
+    private final Map<UUID, List<PotionEffect>> savedPotionEffects = new HashMap<>();
     private org.bukkit.scheduler.BukkitTask timeFreezeTask = null;
 
     public PauseManager(Plugin plugin) {
@@ -132,7 +135,7 @@ public class PauseManager {
 
         frozen = true;
         for (Player player : Bukkit.getOnlinePlayers()) {
-            applyWaterBreathing(player);
+            applyPotionFreeze(player);
             player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1f, 0.5f);
         }
         setMobAI(false);
@@ -152,7 +155,7 @@ public class PauseManager {
 
         frozen = true;
         for (Player player : Bukkit.getOnlinePlayers()) {
-            applyWaterBreathing(player);
+            applyPotionFreeze(player);
             player.playSound(player.getLocation(), Sound.BLOCK_GLASS_BREAK, 1f, 0.5f);
         }
         setMobAI(false);
@@ -203,10 +206,10 @@ public class PauseManager {
         cancelTimeFreezeTask();
         notifyAbilityManager("onGameUnfreeze");
         for (Player player : Bukkit.getOnlinePlayers()) {
-            restoreWaterBreathing(player);
+            restorePotionEffects(player);
             player.playSound(player.getLocation(), Sound.BLOCK_GLASS_PLACE, 1f, 1.2f);
         }
-        savedWaterBreathing.clear();
+        savedPotionEffects.clear();
         for (Player player : Bukkit.getOnlinePlayers()) {
             player.sendMessage("§8[§5QuietTone§8] " + QuietPauseMessages.text(player, "quietpause.pause.resumed",
                     QuietPauseMessages.noPlaceholders()));
@@ -357,34 +360,43 @@ public class PauseManager {
         inCountdown = false;
         frozen = false;
         freezerName = null;
-        accessMode = AccessMode.PUBLIC;
         unfreezeEntities();
         cancelTimeFreezeTask();
         notifyAbilityManager("onGameUnfreeze");
         for (Player player : Bukkit.getOnlinePlayers()) {
-            restoreWaterBreathing(player);
+            restorePotionEffects(player);
         }
-        savedWaterBreathing.clear();
+        savedPotionEffects.clear();
     }
 
     public void applyTo(Player player) {
         if (!frozen || inCountdown) return;
-        applyWaterBreathing(player);
+        applyPotionFreeze(player);
     }
 
-    private void applyWaterBreathing(Player player) {
-        PotionEffect existing = player.getPotionEffect(PotionEffectType.WATER_BREATHING);
-        if (existing != null) {
-            savedWaterBreathing.put(player.getUniqueId(), existing);
+    private void applyPotionFreeze(Player player) {
+        Collection<PotionEffect> active = player.getActivePotionEffects();
+        savedPotionEffects.put(player.getUniqueId(), new ArrayList<>(active));
+        for (PotionEffect effect : active) {
+            player.addPotionEffect(new PotionEffect(
+                effect.getType(), Integer.MAX_VALUE, effect.getAmplifier(),
+                effect.isAmbient(), effect.hasParticles(), effect.hasIcon()
+            ), true);
         }
-        player.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, Integer.MAX_VALUE, 0, false, false));
+        if (player.getPotionEffect(PotionEffectType.WATER_BREATHING) == null) {
+            player.addPotionEffect(new PotionEffect(PotionEffectType.WATER_BREATHING, Integer.MAX_VALUE, 0, false, false));
+        }
     }
 
-    private void restoreWaterBreathing(Player player) {
-        player.removePotionEffect(PotionEffectType.WATER_BREATHING);
-        PotionEffect saved = savedWaterBreathing.remove(player.getUniqueId());
+    private void restorePotionEffects(Player player) {
+        for (PotionEffect effect : player.getActivePotionEffects()) {
+            player.removePotionEffect(effect.getType());
+        }
+        List<PotionEffect> saved = savedPotionEffects.remove(player.getUniqueId());
         if (saved != null) {
-            player.addPotionEffect(saved);
+            for (PotionEffect effect : saved) {
+                player.addPotionEffect(effect);
+            }
         }
     }
 }
