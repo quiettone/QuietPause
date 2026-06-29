@@ -113,7 +113,7 @@ No client-side installation is required when joining a dedicated server.
 
 ### Paper
 
-* Minecraft 1.21 or newer
+* Minecraft 1.20 or newer
 * A compatible Paper server or Paper fork
 
 Compatible Paper forks such as Purpur may also work.
