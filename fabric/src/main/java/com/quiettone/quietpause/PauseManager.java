@@ -151,7 +151,6 @@ public class PauseManager {
         inCountdown = false;
         frozen = false;
         freezerName = null;
-        accessMode = AccessMode.PUBLIC;
         unfreezeEntities(server);
         restoreWorlds(server);
         for (ServerPlayerEntity player : server.getPlayerManager().getPlayerList()) {
